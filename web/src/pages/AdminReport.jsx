@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, PrimaryButton, MessageBar } from '@fluentui/react';
+import { Input, Button, MessageBar } from '@fluentui/react-components';
 import axios from '../lib/api';
 
 export default function AdminReport() {
@@ -20,8 +20,9 @@ export default function AdminReport() {
   return (
     <div>
       <h2>Monthly Admin Report</h2>
-      <TextField label="Month (YYYY-MM)" value={month} onChange={(_, v) => setMonth(v)} />
-      <PrimaryButton text="Fetch CSV" onClick={handleFetch} disabled={!month} />
+  <label>Month (YYYY-MM)</label>
+  <Input value={month} onChange={e => setMonth(e.target.value)} />
+  <Button onClick={handleFetch} disabled={!month}>Fetch CSV</Button>
       {error && <MessageBar messageBarType={1}>{error}</MessageBar>}
       {csv && (
         <pre style={{ marginTop: 16, background: '#f6f6f6', padding: 12 }}>{csv}</pre>

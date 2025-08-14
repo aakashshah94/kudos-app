@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Dropdown, PrimaryButton, MessageBar } from '@fluentui/react';
+import { Select, Button, MessageBar } from '@fluentui/react-components';
 import axios from '../lib/api';
 
 export default function Redeem() {
@@ -24,16 +24,16 @@ export default function Redeem() {
     <div>
       <h2>Redeem Gift Card</h2>
       {status && <MessageBar messageBarType={status.type === 'error' ? 1 : 0}>{status.text}</MessageBar>}
-      <Dropdown
-        label="Select Gift Card"
-        options={catalog.map(item => ({
-          key: item.catalogItemId,
-          text: `${item.name} ($${item.denominationUSD})`
-        }))}
-        selectedKey={selected}
-        onChange={(_, o) => setSelected(o.key)}
-      />
-      <PrimaryButton text="Redeem" onClick={handleRedeem} disabled={!selected} />
+      <label>Select Gift Card</label>
+      <Select value={selected || ''} onChange={e => setSelected(e.target.value)}>
+        <option value="" disabled>Select...</option>
+        {catalog.map(item => (
+          <option key={item.catalogItemId} value={item.catalogItemId}>
+            {item.name} (${item.denominationUSD})
+          </option>
+        ))}
+      </Select>
+  <Button onClick={handleRedeem} disabled={!selected}>Redeem</Button>
     </div>
   );
 }
