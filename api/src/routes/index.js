@@ -1,3 +1,5 @@
+import { router as adminReports } from './admin.reports.js';
+router.use('/admin/reports', adminReports);
 
 import { router as feed } from './feed.js';
 import { router as adminAllocations } from './admin.allocations.js';
