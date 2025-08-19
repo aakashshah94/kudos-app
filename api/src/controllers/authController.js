@@ -19,7 +19,8 @@ export async function register(req, res) {
     const token = signToken({ userId, tenantId, email, role: 'EMPLOYEE' });
     res.json({ token });
   } catch (e) {
-    res.status(500).json({ error: 'Registration failed' });
+    console.error('Registration error:', e);
+    res.status(500).json({ error: 'Registration failed', details: e.message });
   }
 }
 
@@ -33,7 +34,8 @@ export async function login(req, res) {
     const u = result.recordset[0];
     const token = signToken({ userId: u.userId, tenantId: u.tenantId, email: u.email, role: u.role });
     res.json({ token });
-  } catch {
-    res.status(500).json({ error: 'Login failed' });
+  } catch (e) {
+    console.error('Login error:', e);
+    res.status(500).json({ error: 'Login failed', details: e.message });
   }
 }
