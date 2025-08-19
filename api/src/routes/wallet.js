@@ -1,11 +1,19 @@
-import { Router } from 'express';
-import { authRequired } from '../middleware/auth.js';
-import { query } from '../lib/db.js';
 
-export const router = Router();
+import express from 'express';
+import auth from '../middleware/auth.js';
+import * as db from '../lib/db.js';
 
-router.get('/', authRequired, async (req, res) => {
+export const router = express.Router();
+
+router.get('/', auth, async (req, res) => {
   const { userId } = req.user;
-  const r = await query(`SELECT balancePoints FROM Wallet WHERE userId=@userId`, { userId });
-  res.json({ balancePoints: r.recordset[0]?.balancePoints ?? 0 });
+  try {
+    const pool = await db.getPool();
+    const r = await pool.request()
+      .input('userId', userId)
+      .query('SELECT balance FROM Wallet WHERE userId=@userId');
+    res.json({ balance: r.recordset[0]?.balance ?? 0 });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch wallet balance', meta: err.message });
+  }
 });

@@ -1,11 +1,13 @@
-const express = require('express');
-const { z } = require('zod');
-const db = require('../lib/db');
-const auth = require('../middleware/auth');
+
+import express from 'express';
+import { z } from 'zod';
+import * as db from '../lib/db.js';
+import auth from '../middleware/auth.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const MIN_TRANSFER_POINTS = 50;
 
-const router = express.Router();
+export const router = express.Router();
 
 const transferSchema = z.object({
   recipientUserId: z.string().uuid(),
@@ -24,9 +26,10 @@ router.post('/', auth, async (req, res) => {
     return res.status(400).json({ error: 'Cannot send kudos to yourself.' });
   }
 
-  const tx = await db.pool.request().transaction();
+  const pool = await db.getPool();
+  const tx = pool.transaction();
+  await tx.begin('SERIALIZABLE');
   try {
-    await tx.begin('SERIALIZABLE');
     // Check sender balance
     const senderRes = await tx.request()
       .input('userId', senderUserId)
@@ -45,7 +48,7 @@ router.post('/', auth, async (req, res) => {
       .input('points', points)
       .query('UPDATE Wallet SET balance = balance + @points, lastUpdated = GETDATE() WHERE userId = @userId');
     // Insert transfer
-    const transferId = require('uuid').v4();
+    const transferId = uuidv4();
     await tx.request()
       .input('transferId', transferId)
       .input('senderUserId', senderUserId)
@@ -73,7 +76,8 @@ router.get('/', auth, async (req, res) => {
   else where = 'recipientUserId = @userId';
 
   try {
-    const result = await db.pool.request()
+    const pool = await db.getPool();
+    const result = await pool.request()
       .input('userId', userId)
       .input('limit', limit)
       .input('offset', offset)
@@ -88,5 +92,3 @@ router.get('/', auth, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch transfers', meta: err.message });
   }
 });
-
-module.exports = router;

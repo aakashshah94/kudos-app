@@ -1,11 +1,13 @@
-const express = require('express');
-const { z } = require('zod');
-const db = require('../lib/db');
-const auth = require('../middleware/auth');
+
+import express from 'express';
+import { z } from 'zod';
+import * as db from '../lib/db.js';
+import auth from '../middleware/auth.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const POINTS_PER_MONTH = parseInt(process.env.POINTS_PER_MONTH || '1000', 10);
 
-const router = express.Router();
+export const router = express.Router();
 
 const monthSchema = z.object({
   month: z.string().regex(/^[0-9]{4}-[0-9]{2}$/), // YYYY-MM
@@ -15,7 +17,7 @@ router.post('/monthly', auth, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Forbidden' });
   const month = new Date().toISOString().slice(0, 7);
 
-  const tx = await db.pool.request().transaction();
+  const tx = await db.getPool().then(pool => pool.transaction());
   try {
     await tx.begin('SERIALIZABLE');
     // Idempotency: check if already allocated
@@ -33,7 +35,7 @@ router.post('/monthly', auth, async (req, res) => {
       .query('SELECT userId FROM [User] WHERE tenantId = @tenantId AND isActive = 1');
     for (const { userId } of users.recordset) {
       await tx.request()
-        .input('allocationId', require('uuid').v4())
+        .input('allocationId', uuidv4())
         .input('userId', userId)
         .input('tenantId', req.user.tenantId)
         .input('month', month)
@@ -62,7 +64,8 @@ router.get('/', auth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.errors });
 
   try {
-    const result = await db.pool.request()
+    const pool = await db.getPool();
+    const result = await pool.request()
       .input('tenantId', req.user.tenantId)
       .input('month', month)
       .query(`
@@ -75,5 +78,3 @@ router.get('/', auth, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch allocations', meta: err.message });
   }
 });
-
-module.exports = router;

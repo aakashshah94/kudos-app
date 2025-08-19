@@ -1,10 +1,12 @@
-const express = require('express');
-const { z } = require('zod');
-const db = require('../lib/db');
-const auth = require('../middleware/auth');
-const vendorMock = require('../lib/vendorMock');
 
-const router = express.Router();
+import express from 'express';
+import { z } from 'zod';
+import * as db from '../lib/db.js';
+import auth from '../middleware/auth.js';
+import * as vendorMock from '../lib/vendorMock.js';
+import { v4 as uuidv4 } from 'uuid';
+
+export const router = express.Router();
 
 const redemptionSchema = z.object({
   catalogItemId: z.string().uuid(),
@@ -17,9 +19,10 @@ router.post('/', auth, async (req, res) => {
   const { catalogItemId } = data;
   const userId = req.user.userId;
 
-  const tx = await db.pool.request().transaction();
+  const pool = await db.getPool();
+  const tx = pool.transaction();
+  await tx.begin('SERIALIZABLE');
   try {
-    await tx.begin('SERIALIZABLE');
     // Get catalog item
     const itemRes = await tx.request()
       .input('catalogItemId', catalogItemId)
@@ -46,7 +49,7 @@ router.post('/', auth, async (req, res) => {
     // Call vendor mock
     const vendorResult = await vendorMock.redeem(item.vendorCode, item.denominationUSD, userId);
     // Insert redemption
-    const redemptionId = require('uuid').v4();
+    const redemptionId = uuidv4();
     await tx.request()
       .input('redemptionId', redemptionId)
       .input('userId', userId)
@@ -66,5 +69,3 @@ router.post('/', auth, async (req, res) => {
     res.status(500).json({ error: 'Redemption failed', meta: err.message });
   }
 });
-
-module.exports = router;

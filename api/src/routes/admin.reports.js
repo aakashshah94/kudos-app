@@ -1,8 +1,10 @@
-const express = require('express');
-const { z } = require('zod');
-const db = require('../lib/db');
-const auth = require('../middleware/auth');
-const router = express.Router();
+
+import express from 'express';
+import { z } from 'zod';
+import * as db from '../lib/db.js';
+import auth from '../middleware/auth.js';
+
+export const router = express.Router();
 
 const monthSchema = z.object({
   month: z.string().regex(/^[0-9]{4}-[0-9]{2}$/), // YYYY-MM
@@ -17,17 +19,18 @@ router.get('/monthly', auth, async (req, res) => {
 
   try {
     // Allocations
-    const allocations = await db.pool.request()
+    const pool = await db.getPool();
+    const allocations = await pool.request()
       .input('tenantId', req.user.tenantId)
       .input('month', month)
       .query(`SELECT userId, points FROM Allocation WHERE tenantId = @tenantId AND month = @month`);
     // Transfers
-    const transfers = await db.pool.request()
+    const transfers = await pool.request()
       .input('tenantId', req.user.tenantId)
       .input('month', month)
       .query(`SELECT senderUserId, recipientUserId, points FROM Transfer WHERE senderUserId IN (SELECT userId FROM [User] WHERE tenantId = @tenantId) AND FORMAT(createdAt, 'yyyy-MM') = @month`);
     // Redemptions
-    const redemptions = await db.pool.request()
+    const redemptions = await pool.request()
       .input('tenantId', req.user.tenantId)
       .input('month', month)
       .query(`SELECT userId, usdValue FROM Redemption WHERE userId IN (SELECT userId FROM [User] WHERE tenantId = @tenantId) AND FORMAT(createdAt, 'yyyy-MM') = @month AND status = 'FULFILLED'`);
@@ -56,4 +59,4 @@ router.get('/monthly', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+

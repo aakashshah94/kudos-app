@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 
+
 export function authRequired(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
@@ -11,6 +12,8 @@ export function authRequired(req, res, next) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
+
+export default authRequired;
 
 export function signToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });

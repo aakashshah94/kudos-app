@@ -9,9 +9,6 @@ import { router as adminReports } from './admin.reports.js';
 import { router as feed } from './feed.js';
 import { router as adminAllocations } from './admin.allocations.js';
 
-import { router as feed } from './feed.js';
-import { router as adminAllocations } from './admin.allocations.js';
-
 export const router = Router();
 router.use('/auth', auth);
 router.use('/wallet', wallet);

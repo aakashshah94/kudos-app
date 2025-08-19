@@ -1,15 +1,17 @@
-const express = require('express');
-const db = require('../lib/db');
-const auth = require('../middleware/auth');
 
-const router = express.Router();
+import express from 'express';
+import * as db from '../lib/db.js';
+import auth from '../middleware/auth.js';
+
+export const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
   const { limit = 20, offset = 0 } = req.query;
   const tenantId = req.user.tenantId;
 
   try {
-    const result = await db.pool.request()
+    const pool = await db.getPool();
+    const result = await pool.request()
       .input('tenantId', tenantId)
       .input('limit', limit)
       .input('offset', offset)
@@ -27,5 +29,3 @@ router.get('/', auth, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch feed', meta: err.message });
   }
 });
-
-module.exports = router;
