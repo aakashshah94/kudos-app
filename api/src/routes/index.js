@@ -1,5 +1,13 @@
+
+import { Router } from 'express';
+import { router as auth } from './auth.js';
+import { router as wallet } from './wallet.js';
+import { router as transfers } from './transfers.js';
+import { router as catalog } from './catalog.js';
+import { router as redemptions } from './redemptions.js';
 import { router as adminReports } from './admin.reports.js';
-router.use('/admin/reports', adminReports);
+import { router as feed } from './feed.js';
+import { router as adminAllocations } from './admin.allocations.js';
 
 import { router as feed } from './feed.js';
 import { router as adminAllocations } from './admin.allocations.js';
@@ -12,3 +20,4 @@ router.use('/catalog', catalog);
 router.use('/redemptions', redemptions);
 router.use('/feed', feed);
 router.use('/admin/allocations', adminAllocations);
+router.use('/admin/reports', adminReports);
