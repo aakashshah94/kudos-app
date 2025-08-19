@@ -12,3 +12,6 @@ app.use('/api', apiRouter);
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => console.log(`API listening on :${port}`));
+console.log('SQL_SERVER:', process.env.SQL_SERVER);
+console.log('SQL_DB:', process.env.SQL_DB);
+console.log('AZURE_CLIENT_ID:', process.env.AZURE_CLIENT_ID);

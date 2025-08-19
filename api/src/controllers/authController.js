@@ -20,7 +20,10 @@ export async function register(req, res) {
     res.json({ token });
   } catch (e) {
     console.error('Registration error:', e);
-    res.status(500).json({ error: 'Registration failed', details: e.message });
+    res.status(500).json({
+      error: 'Registration failed',
+      details: e && (e.stack || e.message || e.toString())
+    });
   }
 }
 
@@ -36,6 +39,9 @@ export async function login(req, res) {
     res.json({ token });
   } catch (e) {
     console.error('Login error:', e);
-    res.status(500).json({ error: 'Login failed', details: e.message });
+    res.status(500).json({
+      error: 'Login failed',
+      details: e && (e.stack || e.message || e.toString())
+    });
   }
 }
