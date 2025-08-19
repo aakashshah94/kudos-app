@@ -15,6 +15,7 @@ const config = {
 let poolPromise;
 export function getPool() {
   if (!poolPromise) {
+    console.log('Connecting to SQL with config:', config);
     poolPromise = sql.connect(config);
   }
   return poolPromise;
