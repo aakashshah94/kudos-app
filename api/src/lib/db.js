@@ -1,59 +1,29 @@
-import sql from 'mssql';
-import { DefaultAzureCredential, ManagedIdentityCredential } from '@azure/identity';
+import sql from "mssql";
 
-const isLocal = process.env.NODE_ENV !== 'production';
-
-async function getAccessToken() {
-  let credential;
-
-  if (isLocal) {
-    // Use local dev credentials (VS Code, Azure CLI, etc.)
-    credential = new DefaultAzureCredential();
-    console.log('Using DefaultAzureCredential for local dev');
-  } else {
-    // Use user-assigned managed identity in Azure App Service
-    const clientId = process.env.AZURE_CLIENT_ID;
-    credential = new ManagedIdentityCredential(clientId);
-    console.log(`Using ManagedIdentityCredential with clientId: ${clientId}`);
+const config = {
+  server: process.env.SQL_SERVER,           // e.g., sql-kudos-dev.database.windows.net
+  database: process.env.SQL_DATABASE,       // e.g., zest-dev
+  user: process.env.SQL_USER,               // e.g., zest_admin
+  password: process.env.SQL_PASSWORD,       // e.g., StrongPassword123!
+  options: {
+    encrypt: true,                          // Required for Azure SQL
+    enableArithAbort: true
   }
+};
 
-  const tokenResponse = await credential.getToken('https://database.windows.net/');
-  return tokenResponse.token;
-}
+let pool;
 
-async function getConfig() {
-  const token = await getAccessToken();
+export async function getDbPool() {
+  if (pool) return pool;
 
-  return {
-    server: process.env.SQL_SERVER,
-    database: process.env.SQL_DB,
-    options: {
-      encrypt: true,
-      trustServerCertificate: false,
-    },
-    authentication: {
-      type: 'azure-active-directory-access-token',
-      options: {
-        token,
-      },
-    },
-  };
-}
-
-let poolPromise;
-
-export async function getPool() {
-  if (!poolPromise) {
-    const config = await getConfig();
-    console.log('🛠️ Connecting to SQL with config:', {
-      server: config.server,
-      database: config.database,
-      authType: config.authentication.type,
-    });
-
-    poolPromise = sql.connect(config);
+  try {
+    pool = await sql.connect(config);
+    console.log("✅ SQL pool connected via SQL authentication");
+    return pool;
+  } catch (err) {
+    console.error("❌ SQL connection failed:", err);
+    throw err;
   }
-  return poolPromise;
 }
 
 export async function query(sqlString, params = []) {
