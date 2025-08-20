@@ -28,7 +28,7 @@ export async function getDbPool() {
 
 export async function query(sqlString, params = []) {
   try {
-    const pool = await getPool();
+    const pool = await getDbPool();
     const request = pool.request();
 
     if (Array.isArray(params)) {
